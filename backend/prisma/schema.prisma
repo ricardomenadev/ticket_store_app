@@ -1,77 +1,151 @@
+// Configuración del origen de datos (base de datos)
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider = "mysql"    // Especifica que usaremos MySQL como base de datos
+  url      = env("DATABASE_URL")  // URL de conexión obtenida desde variable de entorno
 }
 
+// Configuración del generador del cliente Prisma
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client-js"  // Genera el cliente de Prisma para JavaScript/TypeScript
 }
 
-model Usuario {
-  id        Int      @id @default(autoincrement())
-  nombre    String
-  email     String   @unique
-  contraseña String
-  rol_id    Int
-  Rol       Rol      @relation(fields: [rol_id], references: [id])
-  Pedidos   Pedido[]
-  Entradas  Entrada[]
+// Modelo de Usuario
+model User {
+  id          Int       @id @default(autoincrement())  // ID único autoincremental
+  firstName   String    // Nombre del usuario
+  lastName    String    // Apellido del usuario
+  phone       String    // Teléfono (string para incluir formato internacional: +54...)
+  email       String    @unique  // Email único para cada usuario
+  password    String    // Contraseña hasheada
+  roleId      Int      // Clave foránea para relacionar con Role
+  createdAt   DateTime  @default(now())  // Fecha de creación automática
+  updatedAt   DateTime  @updatedAt       // Fecha de actualización automática
+  status      Status    @default(ACTIVE) // Estado del usuario (enum Status)
+  role        Role      @relation(fields: [roleId], references: [id])  // Relación con modelo Role
+  orders      Order[]   // Relación uno a muchos con Orders
+  tickets     Ticket[]  // Relación uno a muchos con Tickets
 }
 
-model Rol {
+// Modelo de Roles
+model Role {
   id       Int       @id @default(autoincrement())
-  nombre   String
-  Usuarios Usuario[]
+  name     RoleType  @unique  // Tipo de rol usando enum RoleType
+  users    User[]    // Relación inversa con User
 }
 
-model Evento {
-  id        Int       @id @default(autoincrement())
-  nombre    String
-  fecha     DateTime
-  ubicacion String
-  Entradas  Entrada[]
+// Modelo de Eventos
+model Event {
+  id          Int          @id @default(autoincrement())
+  name        String       // Nombre del evento
+  description String?      @db.Text  // Descripción opcional, tipo TEXT para textos largos
+  date        DateTime     // Fecha y hora del evento
+  location    String       // Ubicación del evento
+  price       Float        // Precio de las entradas
+  capacity    Int          // Capacidad máxima del evento
+  status      EventStatus  @default(SCHEDULED)  // Estado del evento
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tickets     Ticket[]     // Relación uno a muchos con Tickets
 }
 
-model Entrada {
-  id        Int      @id @default(autoincrement())
-  codigo_qr String   @unique
-  evento_id Int
-  usuario_id Int
-  Evento    Evento   @relation(fields: [evento_id], references: [id])
-  Usuario   Usuario  @relation(fields: [usuario_id], references: [id])
+// Modelo de Entradas
+model Ticket {
+  id          Int           @id @default(autoincrement())
+  qrCode      String        @unique  // Código QR único para cada entrada
+  number      String        @unique  // Número de entrada legible y único
+  status      TicketStatus  @default(VALID)  // Estado de la entrada
+  eventId     Int          // Clave foránea para Event
+  userId      Int          // Clave foránea para User
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  event       Event         @relation(fields: [eventId], references: [id])  // Relación con Event
+  user        User          @relation(fields: [userId], references: [id])   // Relación con User
+  orderTickets OrderTicket[]  // Relación muchos a muchos con Order
 }
 
-model Producto {
+// Modelo de Productos
+model Product {
   id          Int       @id @default(autoincrement())
-  nombre      String
-  descripcion String
-  precio      Float
-  PedidoProductos PedidoProducto[]
+  name        String    // Nombre del producto
+  description String    @db.Text  // Descripción en formato TEXT
+  price       Float     // Precio del producto
+  stock       Int       @default(0)  // Stock inicial en 0
+  image       String?   // URL de la imagen (opcional)
+  status      Status    @default(ACTIVE)  // Estado del producto
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  orderProducts OrderProduct[]  // Relación muchos a muchos con Order
 }
 
-model Pedido {
-  id          Int       @id @default(autoincrement())
-  usuario_id  Int
-  fecha       DateTime
-  total       Float
-  Usuario     Usuario   @relation(fields: [usuario_id], references: [id])
-  PedidoProductos PedidoProducto[]
-  PedidoEntradas PedidoEntrada[]
+// Modelo de Pedidos
+model Order {
+  id            Int         @id @default(autoincrement())
+  userId        Int        // Usuario que realizó el pedido
+  date          DateTime    @default(now())  // Fecha del pedido
+  total         Float      // Monto total del pedido
+  status        OrderStatus @default(PENDING)  // Estado del pedido
+  mpPaymentId   String?    // ID de transacción de MercadoPago (opcional)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  user          User        @relation(fields: [userId], references: [id])
+  orderProducts OrderProduct[]  // Productos en el pedido
+  orderTickets  OrderTicket[]   // Entradas en el pedido
 }
 
-model PedidoProducto {
-  pedido_id  Int
-  producto_id Int
-  cantidad   Int
-  Pedido     Pedido   @relation(fields: [pedido_id], references: [id])
-  Producto   Producto @relation(fields: [producto_id], references: [id])
-  @@id([pedido_id, producto_id])
+// Tabla intermedia para relación Pedido-Producto
+model OrderProduct {
+  orderId     Int      // Parte de la clave primaria compuesta
+  productId   Int      // Parte de la clave primaria compuesta
+  quantity    Int      // Cantidad de productos
+  unitPrice   Float    // Precio unitario al momento de la compra
+  order       Order    @relation(fields: [orderId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+  @@id([orderId, productId])  // Define clave primaria compuesta
 }
 
-model PedidoEntrada {
-  pedido_id  Int
-  entrada_id Int
-  Pedido     Pedido   @relation(fields: [pedido_id], references: [id])
-  Entrada    Entrada  @relation(fields: [entrada_id], references: [id])
-  @@id([pedido_id, entrada_id])
+// Tabla intermedia para relación Pedido-Entrada
+model OrderTicket {
+  orderId     Int      // Parte de la clave primaria compuesta
+  ticketId    Int      // Parte de la clave primaria compuesta
+  price       Float    // Precio de la entrada al momento de la compra
+  order       Order    @relation(fields: [orderId], references: [id])
+  ticket      Ticket   @relation(fields: [ticketId], references: [id])
+  @@id([orderId, ticketId])  // Define clave primaria compuesta
+}
+
+// Enumeración de tipos de roles
+enum RoleType {
+  SUPER_ADMIN    // Administrador con todos los permisos
+  ADMIN          // Administrador regular
+  STAFF          // Personal de apoyo
+  CUSTOMER       // Cliente regular
+}
+
+// Enumeración de estados generales
+enum Status {
+  ACTIVE      // Elemento activo/disponible
+  INACTIVE    // Elemento inactivo/no disponible
+}
+
+// Enumeración de estados de eventos
+enum EventStatus {
+  SCHEDULED   // Evento programado
+  IN_PROGRESS // Evento en curso
+  FINISHED    // Evento finalizado
+  CANCELLED   // Evento cancelado
+}
+
+// Enumeración de estados de entradas
+enum TicketStatus {
+  VALID       // Entrada válida
+  USED        // Entrada ya utilizada
+  CANCELLED   // Entrada cancelada
+}
+
+// Enumeración de estados de pedidos
+enum OrderStatus {
+  PENDING     // Pedido pendiente de pago
+  PAID        // Pedido pagado
+  DELIVERED   // Pedido entregado
+  CANCELLED   // Pedido cancelado
 }
