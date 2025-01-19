@@ -1,0 +1,77 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String   @unique
+  contraseña String
+  rol_id    Int
+  Rol       Rol      @relation(fields: [rol_id], references: [id])
+  Pedidos   Pedido[]
+  Entradas  Entrada[]
+}
+
+model Rol {
+  id       Int       @id @default(autoincrement())
+  nombre   String
+  Usuarios Usuario[]
+}
+
+model Evento {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  fecha     DateTime
+  ubicacion String
+  Entradas  Entrada[]
+}
+
+model Entrada {
+  id        Int      @id @default(autoincrement())
+  codigo_qr String   @unique
+  evento_id Int
+  usuario_id Int
+  Evento    Evento   @relation(fields: [evento_id], references: [id])
+  Usuario   Usuario  @relation(fields: [usuario_id], references: [id])
+}
+
+model Producto {
+  id          Int       @id @default(autoincrement())
+  nombre      String
+  descripcion String
+  precio      Float
+  PedidoProductos PedidoProducto[]
+}
+
+model Pedido {
+  id          Int       @id @default(autoincrement())
+  usuario_id  Int
+  fecha       DateTime
+  total       Float
+  Usuario     Usuario   @relation(fields: [usuario_id], references: [id])
+  PedidoProductos PedidoProducto[]
+  PedidoEntradas PedidoEntrada[]
+}
+
+model PedidoProducto {
+  pedido_id  Int
+  producto_id Int
+  cantidad   Int
+  Pedido     Pedido   @relation(fields: [pedido_id], references: [id])
+  Producto   Producto @relation(fields: [producto_id], references: [id])
+  @@id([pedido_id, producto_id])
+}
+
+model PedidoEntrada {
+  pedido_id  Int
+  entrada_id Int
+  Pedido     Pedido   @relation(fields: [pedido_id], references: [id])
+  Entrada    Entrada  @relation(fields: [entrada_id], references: [id])
+  @@id([pedido_id, entrada_id])
+}

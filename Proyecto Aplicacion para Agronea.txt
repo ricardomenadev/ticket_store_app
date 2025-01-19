@@ -1,0 +1,179 @@
+Proyecto: Aplicacion para Venta de Entradas y Tienda Virtual
+
+1. Tecnologias a utilizar
+
+- Backend: Node.js (Express para la API).
+
+- Frontend: React.
+
+- CSS Framework: Tailwind CSS.
+
+- ORM: Prisma.
+
+- Base de datos: MySQL.
+
+2. Funcionalidades principales de la tienda virtual
+
+- Venta de entradas:
+
+  - Las entradas seran un producto especial dentro de la tienda.
+
+  - Al comprar, se activara una configuracion predefinida que generara las entradas automaticamente con codigos QR unicos.
+
+  - Las entradas generadas se enviaran al usuario por correo u otro medio.
+
+- Venta de productos de la marca:
+
+  - Venta de productos en linea (tienda virtual).
+
+- Registro de usuarios:
+
+  - Los usuarios deberan registrarse para realizar compras.
+
+  - Se guardaran datos basicos para gestionar envi­os o retiro en persona.
+
+  - Los usuarios tendran la posibilidad de elegir entre varias formas de pago, efectivo (oficina fisica), electronico (pasarela de pagos con Mercadopago).
+
+- Descarga de datos:
+
+  - Posibilidad de descargar un archivo Excel con un registro de todas las entradas emitidas junto con sus codigos QR.
+
+- Roles de usuario:
+
+  - Los administradores jefes seran generados unicamente por un super admin (programador en jefe).
+
+  - Los administradores jefes podran crear perfiles para sus empleados, denominados "colaborador administrativo".
+
+-Los jefes admin y los colaboradores admin tienen que tener la posibilidad en sus perfiles de poder hacer control de las entradas comercializadas en la tienda virtual a traves de sus codigo qr correspondiente o numero de entrada emitida (el cual debe ser unico e irrepetible), en caso de que el codigo QR este poco legible o dañado en la entrada impresa.
+
+3. Aplicacion anexa para celular
+
+Esta app estara enfocada exclusivamente en la gestion de entradas y productos en eventos:
+
+1. Verificacion de entradas:
+
+   - Escaneo de codigos QR con la camara del celular.
+
+   - Busqueda manual de la entrada a traves del ingreso del codigo de ticket.
+
+   - Descaga y subida automatica cada 3 min de archivo formato json, nuevos que no figuren en la base de datos local, la cual haya sido descargada para ser usada de forma        offline.
+
+   - Soporte tanto para uso en linea como sin conexion.
+
+2. Gestion manual de entradas:
+
+   - Visualizacion de un registro de entradas emitidas.
+
+   - Mostrar datos importantes como el numero de entrada y detalles asociados.
+
+3. Gestion de productos a entregar:
+
+   - Seccion para realizar entregas de productos comprados.
+
+   - Registro de las entregas verificando el numero de pedido antes de completarlas.
+
+4. Flujo inicial sugerido para el desarrollo
+
+
+Primera fase (MVP):
+
+- Implementar una tienda virtual basica con:
+
+  - Venta de entradas (como producto especial). La posibilidad para los admin jefes de crear un evento determinado para el cual se cree un producto especial en la tienda (entrada con nombre de dicho evento).
+
+  - Registro de usuarios.
+
+  - Gestion de pedidos y generacion de entradas.
+
+- Crear el sistema de descarga de archivos Excel con las entradas emitidas.
+
+Segunda fase (ampliacion):
+
+- Mejorar la funcionalidad de la tienda (diseño, filtros, etc.).
+
+- Añadir mas opciones para productos fisicos y configuraciones personalizadas para eventos.
+
+Tercera fase (app anexa):
+
+- Desarrollar la app movil con las funciones especificas para eventos.
+
+- Verificacion offline/online y gestion de entregas.
+
+
+
+Diagrama de flujo para la base de datos:
+
+Usuarios
+---------
+- id (PK)
+- nombre
+- email
+- contraseña
+- rol_id (FK)
+
+Roles
+---------
+- id (PK)
+- nombre
+
+Eventos
+---------
+- id (PK)
+- nombre
+- fecha
+- ubicacion
+
+Entradas
+---------
+- id (PK)
+- codigo_qr
+- evento_id (FK)
+- usuario_id (FK)
+
+Productos
+---------
+- id (PK)
+- nombre
+- descripcion
+- precio
+
+Pedidos
+---------
+- id (PK)
+- usuario_id (FK)
+- fecha
+- total
+
+Pedido_Productos
+---------
+- pedido_id (FK)
+- producto_id (FK)
+- cantidad
+
+Pedido_Entradas
+---------
+- pedido_id (FK)
+- entrada_id (FK)
+
+Explicación:
+Usuarios: Tabla que almacena la información de los usuarios.
+Roles: Tabla que almacena los diferentes roles de los usuarios.
+Eventos: Tabla que almacena la información de los eventos.
+Entradas: Tabla que almacena la información de las entradas generadas para los eventos.
+Productos: Tabla que almacena la información de los productos de la tienda.
+Pedidos: Tabla que almacena la información de los pedidos realizados por los usuarios.
+Pedido_Productos: Tabla intermedia para la relación muchos a muchos entre pedidos y productos.
+Pedido_Entradas: Tabla intermedia para la relación muchos a muchos entre pedidos y entradas.
+
+Usuarios: Información de los usuarios registrados.
+Entradas: Información sobre las entradas vendidas.
+Productos: Información sobre los productos de la tienda.
+Pedidos: Información sobre los pedidos realizados por los usuarios.
+Eventos: Información sobre los eventos para los cuales se venden entradas.
+Roles: Información sobre los roles de los usuarios (super admin, admin jefe, colaborador administrativo).
+
+Relaciones entre entidades:
+Un usuario puede tener múltiples pedidos.
+Un pedido puede contener múltiples productos y/o entradas.
+Un evento puede tener múltiples entradas.
+Un usuario puede tener un rol específico.
