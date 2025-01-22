@@ -46,4 +46,10 @@ export const toastConfig = {
     logoutSuccess: 'Sesión cerrada correctamente',
     networkError: 'Error de conexión',
     validationError: 'Por favor, completa todos los campos',
+    eventCreated: 'Evento creado exitosamente',
+    eventUpdated: 'Evento actualizado exitosamente',
+    orderSuccess: 'Pedido realizado exitosamente',
+    paymentSuccess: 'Pago procesado correctamente',
+    ticketGenerated: 'Entrada generada exitosamente',
+    emailSent: 'Email enviado correctamente'
   };

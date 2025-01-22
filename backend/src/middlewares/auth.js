@@ -1,3 +1,26 @@
+const jwt = require('jsonwebtoken');
+
+const verifyToken = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Token no proporcionado' 
+            });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (error) {
+        return res.status(401).json({ 
+            success: false, 
+            error: 'Token inválido' 
+        });
+    }
+};
+
 const isSuperAdmin = async (req, res, next) => {
     if (req.user.role.name !== 'SUPER_ADMIN') {
         return res.status(403).json({ 
@@ -24,3 +47,5 @@ const isStaffOrHigher = async (req, res, next) => {
     }
     next();
 };
+
+module.exports = { verifyToken, isSuperAdmin, isAdminOrHigher, isStaffOrHigher };
