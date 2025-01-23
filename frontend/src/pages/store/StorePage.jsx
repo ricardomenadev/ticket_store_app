@@ -1,28 +1,25 @@
 // src/pages/store/StorePage.jsx
 import { useStore } from '../../context/store/StoreContext';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 export default function StorePage() {
+    const navigate = useNavigate();
     const { 
         storeItems, 
         cart, 
         addToCart, 
         removeFromCart,
-        processPurchase,
+        
         cartTotal 
     } = useStore();
 
-    const handlePurchase = async () => {
+    // Manejador para proceder al checkout
+    const handleProceedToCheckout = () => {
         if (cart.length === 0) {
             return toast.error('El carrito está vacío');
         }
-
-        try {
-            await processPurchase();
-            toast.success('¡Compra realizada con éxito!');
-        } catch (error) {
-            toast.error('Error al procesar la compra');
-        }
+        navigate('/store/checkout');
     };
 
     return (
@@ -97,7 +94,7 @@ export default function StorePage() {
                             <span>${cartTotal}</span>
                         </div>
                         <button
-                            onClick={handlePurchase}
+                            onClick={handleProceedToCheckout}
                             className="w-full mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
                         >
                             Finalizar Compra
