@@ -9,6 +9,7 @@ import LoginPage from "./pages/auth/LoginPage";
 import StorePage from "./pages/store/StorePage";
 import DashboardPage from "./pages/admin/DashboardPage";
 import CheckoutPage from "./pages/store/CheckoutPage";
+import PurchaseConfirmationPage from "./pages/store/PurchaseConfirmationPage";
 
 // Components
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -40,6 +41,7 @@ function App() {
             >
               <Route index element={<StorePage />} />
               <Route path="checkout" element={<CheckoutPage />} />
+              <Route path="purchase-confimation" element={<PurchaseConfirmationPage />} />
             </Route>
 
             {/* Rutas protegidas para administración */}

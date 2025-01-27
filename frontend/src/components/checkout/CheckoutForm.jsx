@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useStore } from "../../context/store/StoreContext";
 import { useAuth } from "../../context/auth/AuthContext";
+import toast from 'react-hot-toast';
 
 // Recibimos onSubmit como prop para comunicarnos con el componente padre (CheckoutPage)
 const CheckoutForm = ({ onSubmit }) => {
@@ -10,40 +11,101 @@ const CheckoutForm = ({ onSubmit }) => {
 
   // Estados locales para los datos de entrega
   // Por defecto, asumimos entrega por email para entradas
-  const [deliveryPreference, setDeliveryPreference] = useState("email");
 
-  // Estado para la dirección de envío de productos físicos
-  const [shippingAddress, setShippingAddress] = useState({
-    street: "",
-    city: "",
-    postalCode: "",
-    additionalInfo: "",
-  });
+  const [ticketDelivery, setTicketDelivery] = useState("email");
+  const [productDelivery, setProductDelivery] = useState("pickupInEvent");
+  const [additionalEmail, setAdditionalEmail] = useState(user.email);
+  const [isProcessing, setIsProcessing] = useState();
 
   // Verificamos qué tipos de items hay en el carrito
   const hasProducts = cart.some((item) => item.type === "product");
   const hasTickets = cart.some((item) => item.type === "ticket");
 
+  // Datos estáticos para información de retiro
+  const eventInfo = {
+    address: "Av. Corrientes 1234",
+    date: "15 de Marzo, 2024",
+    time: "18:00 - 23:00",
+    pickupHours: "17:00 - 20:00",
+  };
+
+  const officeInfo = {
+    address: "Av. Rivadavia 5678",
+    schedule: "Lunes a Viernes",
+    hours: "9:00 - 18:00",
+  };
+
   // Manejador del envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Preparamos los datos del pedido para enviar al servidor
     const orderData = {
       items: cart,
       total: cartTotal,
-      deliveryPreference,
+      ticketDelivery: hasTickets ? ticketDelivery : null,
+      productDelivery: hasProducts ? productDelivery : null,
       customerInfo: {
         name: user.firstName + " " + user.lastName,
         email: user.email,
         phone: user.phone,
       },
-      // Solo incluimos la dirección si el método es shipping
-      ...(deliveryPreference === "shipping" && { shippingAddress }),
+      ...(ticketDelivery === "email" && { additionalEmail }),
     };
-
-    // Llamamos a la función onSubmit que recibimos como prop
     onSubmit(orderData);
+  };
+
+  const renderTicketInfo = () => {
+    if (hasTickets && ticketDelivery === "pickup") {
+      return (
+        <div className="mt-4 p-4 bg-gray-50 rounded-md">
+          <h4 className="font-semibold text-gray-700">
+            Información de Retiro de Entradas
+          </h4>
+          <p className="mt-2">Dirección: {officeInfo.address}</p>
+          <p>Días: {officeInfo.schedule}</p>
+          <p>Horario: {officeInfo.hours}</p>
+          <p className="mt-2 text-sm text-gray-600">
+            Presentar DNI y número de orden para retirar
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const renderProductInfo = () => {
+    if (hasProducts) {
+      if (productDelivery === "pickupInEvent") {
+        return (
+          <div className="mt-4 p-4 bg-gray-50 rounded-md">
+            <h4 className="font-semibold text-gray-700">
+              Información de Retiro de Productos
+            </h4>
+            <p className="mt-2">Dirección: {eventInfo.address}</p>
+            <p>Fecha: {eventInfo.date}</p>
+            <p>Horario del evento: {eventInfo.time}</p>
+            <p>Horario de retiro: {eventInfo.pickupHours}</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Presentar DNI y número de orden para retirar
+            </p>
+          </div>
+        );
+      } else if (productDelivery === "pickup") {
+        return (
+          <div className="mt-4 p-4 bg-gray-50 rounded-md">
+            <h4 className="font-semibold text-gray-700">
+              Información de Retiro de Productos
+            </h4>
+            <p className="mt-2">Dirección: {officeInfo.address}</p>
+            <p>Días: {officeInfo.schedule}</p>
+            <p>Horario: {officeInfo.hours}</p>
+            <p className="mt-2 text-sm text-gray-600">
+              Presentar DNI y número de orden para retirar
+            </p>
+          </div>
+        );
+      }
+    }
+    return null;
   };
 
   return (
@@ -60,50 +122,20 @@ const CheckoutForm = ({ onSubmit }) => {
           <p>Teléfono: {user.phone}</p>
         </div>
 
-        {/* Opciones de entrega para productos físicos */}
-        {hasProducts && (
-          <div>
-            <h3 className="font-semibold mb-2">
-              Método de Entrega para Productos
-            </h3>
-            <div className="space-y-2">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="shipping"
-                  checked={deliveryPreference === "shipping"}
-                  onChange={(e) => setDeliveryPreference(e.target.value)}
-                  className="form-radio"
-                />
-                <span>Envío a domicilio</span>
-              </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="pickup"
-                  checked={deliveryPreference === "pickup"}
-                  onChange={(e) => setDeliveryPreference(e.target.value)}
-                  className="form-radio"
-                />
-                <span>Retirar en sucursal</span>
-              </label>
-            </div>
-          </div>
-        )}
-
-        {/* Preferencias de Entrega para Entradas */}
-        {hasTickets && !hasProducts && (
-          <div>
-            <h3 className="font-semibold mb-2">
-              Preferencia de Entrega de Entradas
-            </h3>
+        {/* Sección de Entradas */}
+        {hasTickets && (
+          <div className="border p-4 rounded-md">
+            <h3 className="font-semibold mb-4">Entrega de Entradas</h3>
             <div className="space-y-2">
               <label className="flex items-center space-x-2">
                 <input
                   type="radio"
                   value="email"
-                  checked={deliveryPreference === "email"}
-                  onChange={(e) => setDeliveryPreference(e.target.value)}
+                  checked={ticketDelivery === "email"}
+                  onChange={(e) => {
+                    setTicketDelivery(e.target.value);
+                    setAdditionalEmail(user.email);
+                  }}
                   className="form-radio"
                 />
                 <span>Recibir por email</span>
@@ -112,75 +144,64 @@ const CheckoutForm = ({ onSubmit }) => {
                 <input
                   type="radio"
                   value="pickup"
-                  checked={deliveryPreference === "pickup"}
-                  onChange={(e) => setDeliveryPreference(e.target.value)}
+                  checked={ticketDelivery === "pickup"}
+                  onChange={(e) => setTicketDelivery(e.target.value)}
                   className="form-radio"
                 />
-                <span>Retirar en sucursal</span>
+                <span>Retirar en oficina</span>
+              </label>
+            </div>
+
+            {ticketDelivery === "email" && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700">
+                  Email para recibir las entradas
+                </label>
+                <input
+                  type="email"
+                  value={additionalEmail}
+                  onChange={(e) => setAdditionalEmail(e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                  required
+                  placeholder={user.email}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {renderTicketInfo()}
+
+        {/* Sección de Productos Físicos */}
+        {hasProducts && (
+          <div className="border p-4 rounded-md">
+            <h3 className="font-semibold mb-4">Entrega de Productos</h3>
+            <div className="space-y-2">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="pickupInEvent"
+                  checked={productDelivery === "pickupInEvent"}
+                  onChange={(e) => setProductDelivery(e.target.value)}
+                  className="form-radio"
+                />
+                <span>Retiro en stand de Evento</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  value="pickup"
+                  checked={productDelivery === "pickup"}
+                  onChange={(e) => setProductDelivery(e.target.value)}
+                  className="form-radio"
+                />
+                <span>Retiro en oficina</span>
               </label>
             </div>
           </div>
         )}
 
-        {/* Formulario de dirección si eligió envío a domicilio */}
-        {hasProducts && deliveryPreference === "shipping" && (
-          <div className="space-y-4">
-            <h3 className="font-semibold">Dirección de Envío</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Calle y Número
-              </label>
-              <input
-                type="text"
-                value={shippingAddress.street}
-                onChange={(e) =>
-                  setShippingAddress({
-                    ...shippingAddress,
-                    street: e.target.value,
-                  })
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                required={deliveryPreference === "shipping"}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Ciudad
-                </label>
-                <input
-                  type="text"
-                  value={shippingAddress.city}
-                  onChange={(e) =>
-                    setShippingAddress({
-                      ...shippingAddress,
-                      city: e.target.value,
-                    })
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required={deliveryPreference === "shipping"}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Código Postal
-                </label>
-                <input
-                  type="text"
-                  value={shippingAddress.postalCode}
-                  onChange={(e) =>
-                    setShippingAddress({
-                      ...shippingAddress,
-                      postalCode: e.target.value,
-                    })
-                  }
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  required={deliveryPreference === "shipping"}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        {renderProductInfo()}
 
         {/* Resumen del Pedido */}
         <div className="border-t pt-4">
