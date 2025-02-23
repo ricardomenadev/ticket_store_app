@@ -23,14 +23,13 @@ const CheckoutForm = ({ onSubmit }) => {
 
   // Datos estáticos para información de retiro
   const eventInfo = {
-    address: "Av. Corrientes 1234",
-    date: "15 de Marzo, 2024",
-    time: "18:00 - 23:00",
-    pickupHours: "17:00 - 20:00",
+    address: "Ruta 89",
+    date: "25 de Julio, 2025",
+    time: "10:00 - 18:00",
   };
 
   const officeInfo = {
-    address: "Av. Rivadavia 5678",
+    address: "Maipu 500",
     schedule: "Lunes a Viernes",
     hours: "9:00 - 18:00",
   };

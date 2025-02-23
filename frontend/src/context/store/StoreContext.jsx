@@ -18,11 +18,11 @@ const initialState = {
         ticket: {
             id: 1,
             type: 'ticket',
-            name: 'Entrada Evento Principal',
+            name: 'Agronea 2025',
             description: 'Entrada General',
             price: 1500,
-            date: '2024-03-15',
-            location: 'Teatro Principal'
+            date: '25-07-2025',
+            location: 'Ruta 89'
         },
         products: [
             {

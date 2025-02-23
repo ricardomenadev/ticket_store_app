@@ -17,16 +17,23 @@ const CheckoutPage = () => {
 
     const handleCheckoutSubmit = async (orderData) => {
         try {
-            setIsProcessing(true);
-            await processPurchase(orderData);
-            toast.success('¡Compra realizada con éxito!');
-            navigate('/store');
+          setIsProcessing(true);
+          const result = await processPurchase(orderData);
+          navigate('/store/purchase-confirmation', { 
+            state: { 
+              orderData: {
+                ...orderData,
+                orderId: result.orderId,
+                purchaseDate: new Date().toISOString()
+              } 
+            }
+          });
         } catch (error) {
-            toast.error('Error al procesar la compra: ' + error.message);
+          toast.error('Error al procesar la compra: ' + error.message);
         } finally {
-            setIsProcessing(false);
+          setIsProcessing(false);
         }
-    };
+      };
 
     return (
         <div className="container mx-auto px-4 py-8">
