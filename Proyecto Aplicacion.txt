@@ -22,7 +22,7 @@ Proyecto: Aplicacion para Venta de Entradas y Tienda Virtual
 
   - Las entradas generadas se enviaran al usuario por correo u otro medio.
 
-- Venta de productos de la marca:..
+- Venta de productos de la marca:
 
   - Venta de productos en linea (tienda virtual).
 
